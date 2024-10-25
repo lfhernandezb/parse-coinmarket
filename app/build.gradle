@@ -22,9 +22,10 @@ dependencies {
     // This dependency is used by the application.
     implementation libs.guava
 
-    implementation 'org.seleniumhq.selenium:selenium-java:4.25.0'
+    // implementation 'org.seleniumhq.selenium:selenium-java:4.25.0'
     // implementation 'org.webjars.npm:phantomjs:2.1.7'
-    implementation 'com.codeborne:phantomjsdriver:1.4.4'
+    // implementation 'com.codeborne:phantomjsdriver:1.4.4'
+    implementation 'org.jsoup:jsoup:1.18.1'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

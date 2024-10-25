@@ -3,61 +3,129 @@
  */
 package cl.dsoft.coinmarket_parser;
 
-import com.google.common.base.Predicate;
-import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.phantomjs.PhantomJSDriver;
-import org.openqa.selenium.phantomjs.PhantomJSDriverService;
-import org.openqa.selenium.remote.DesiredCapabilities;
-import org.openqa.selenium.remote.RemoteWebDriver;
-//import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
-// import org.openqa.selenium.safari.SafariOptions;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
+
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import java.io.IOException;
-import java.net.URL;
-import java.time.Duration;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
 
 public class App {
 
+    static HashMap<String, List<String>> values = new HashMap<>();
     public static void main(String[] args) throws IOException {
-        /*
-        // JSOUP
-        Document doc = Jsoup.connect("https://coinmarketcap.com/")
-                .get();
-
-        Elements rows = doc.select("tr");
-        int index_tr = 0;
-        for(org.jsoup.nodes.Element row :rows)
-        {
-
-
-            if (index_tr > 10) {
-                break;
-            }
-            Elements columns = row.select("td");
-            int index = 0;
-            for (org.jsoup.nodes.Element column:columns)
-            {
-                index++;
-                if (index == 2 || index == 3 || index == 5) {
-                    System.out.print(column.text() + " ");
+        int SECONDS = 120; // The delay in milliseconds
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() { // Function runs every MINUTES minutes.
+                // Run the code you want here
+                try {
+                    App.task(); // If the function you wanted was static
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
             }
+        }, 0, 1000 * SECONDS);
+        // 1000 milliseconds in a second * 60 per minute * the MINUTES variable.
+    }
+
+    private static void task() throws IOException {
+        // JSOUP
+
+        // Document doc = Jsoup.connect("https://coinmarketcap.com/").get();
+
+        Document doc = Jsoup.connect("https://coinmarketcap.com/").userAgent("Mozilla").header("Cache-control", "no-cache").header("Cache-store", "no-store").timeout(4000).get();
+
+        Elements rows = doc.select("tr");
+        // int index_tr = 0;
+        boolean error = false;
+        for(org.jsoup.nodes.Element row :rows)
+        {
+            String signus = "";
+            String strIndex = "";
+            float ratio = 0;
+
+            Elements columns = row.select("td");
+            int index = 0;
+            error = false;
+            for (org.jsoup.nodes.Element column:columns)
+            {
+                // System.out.print(column.text() + " ");
+                if (index == 1 && !column.hasText()) {
+                    error = true;
+                    break;
+                } else if (index == 1 && column.hasText()) {
+                    strIndex = column.text();
+
+                    if (!values.containsKey(strIndex)) {
+                        values.put(strIndex, new ArrayList<>());
+                    }
+                }
+
+                if (!error && (index == 1 || index == 2 || index == 4)) {
+                    if (index == 4) {
+                        Elements spans = column.getElementsByClass("icon-Caret-down");
+
+                        if (spans.isEmpty()) {
+                            signus = "+";
+                        } else {
+                            signus = "-";
+                        }
+
+                        // System.out.print(signus);
+                        values.get(strIndex).add(signus + column.text());
+
+                        if (values.get(strIndex).size() > 10) {
+                            // elimino primer elemento
+                            values.get(strIndex).remove(0);
+                        }
+
+                        values.get(strIndex).stream().forEach(s -> System.out.print(s + " "));
+                    } else {
+                        // System.out.print("index: " + String.valueOf(index) + " " + column.text() + " ");
+                        System.out.print(column.text() + " ");
+                    }
+                }
+
+                index++;
+            }
+            /*
+            if (!strIndex.isEmpty()) {
+                // System.out.println("strIndex: " + strIndex);
+
+                // System.out.println("first: " + values.get(strIndex).get(0));
+
+                // System.out.println("last: " + values.get(strIndex).get(values.get(strIndex).size() - 1));
+
+                float first = Float.parseFloat(values.get(strIndex).get(0).substring(0, values.get(strIndex).get(0).length() - 2));
+
+                float last = Float.parseFloat(values.get(strIndex).get(values.get(strIndex).size() - 1).substring(0, values.get(strIndex).get(values.get(strIndex).size() - 1).length() - 2));
+
+                if (first != last && values.get(strIndex).size() > 1) {
+                    ratio = 100 * ((last - first) / first);
+                } else {
+                    ratio = 0;
+                }
+
+                System.out.println(">" + String.valueOf(ratio) + "%<");
+            }
+
+             */
+
+            if (error) {
+                break;
+            }
+
             System.out.println();
 
-            index_tr++;
         }
 
-         */
+
+        /*
 
         // SELENIUM
         RemoteWebDriver driver = null;
@@ -72,14 +140,6 @@ public class App {
         //caps.setJavascriptEnabled(true);
         // caps.setCapability(PhantomJSDriverService.PHANTOMJS_CLI_ARGS, "--webdriver-loglevel=ERROR");
         // caps.setCapability("takesScreenshot", true);
-        /*
-        caps.setCapability(
-                PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY,
-                System.getProperty("user.dir") + "/bin/phantomjs"
-        );
-
-         */
-
 
         ChromeOptions options = new ChromeOptions();
         options.addArguments("headless");
@@ -129,5 +189,8 @@ public class App {
             }
 
         }
+
+         */
+
     }
 }
